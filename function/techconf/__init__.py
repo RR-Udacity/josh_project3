@@ -51,8 +51,8 @@ def main(msg: func.ServiceBusMessage):
         result = cur.fetchall()
         message = result[0][0]
         subject = result[0][1]
-        ic(message)
-        ic(subject)
+        # ic(message)
+        # ic(subject)
         cur.close()
 
         # TODO: Get attendees email and name
@@ -60,7 +60,7 @@ def main(msg: func.ServiceBusMessage):
         cur.execute("SELECT first_name, last_name, email FROM attendee;")
         attendees = cur.fetchall()
         cur.close()
-        ic(attendees)
+        # ic(attendees)
 
         # TODO: Loop through each attendee and send an email with a personalized subject
         logging.info("Sending emails to {} attendees.".format(len(attendees)))
@@ -78,7 +78,7 @@ def main(msg: func.ServiceBusMessage):
             try:
                 sg = SendGridAPIClient(SENDGRID_API_KEY)
                 response = sg.send(message)
-                ic(response.status_code)
+                # ic(response.status_code)
                 if response.status_code == 202:
                     success += 1
             except Exception as e:
@@ -88,7 +88,13 @@ def main(msg: func.ServiceBusMessage):
 
         # TODO: Update the notification table by setting the completed date and updating the status with the total number of attendees notified
         cur = conn.cursor()
-        cur.execute("UPDATE notification SET status ")
+        sql = """ UPDATE notification SET status = %s, completed_date = %s WHERE id = %s
+        """
+        status_text = "Notified {} of {} attendees".format(success, len(attendees))
+        cur.execute(sql, (status_text, datetime.now(), notification_id))
+        ic(cur.rowcount)
+        conn.commit()
+        cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
         logging.error(error)
