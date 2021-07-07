@@ -73,7 +73,7 @@ def main(msg: func.ServiceBusMessage):
                 from_email="Clark.Kent@JoshHaines.com",
                 to_emails=attendee[2],
                 subject="{} - An Update from TechConf".format(attendee[0]),
-                html_content="TechConf Stuff & Things",
+                html_content=message,
             )
             try:
                 sg = SendGridAPIClient(SENDGRID_API_KEY)
