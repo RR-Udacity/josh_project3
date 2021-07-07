@@ -12,6 +12,7 @@ dependencies = [
     "sqlalchemy~=1.4",
     "icecream~=2.1",
     "black~=21.6b0",
+    "psycopg2~=2.9",
 ]
 requires-python = ">=3.9"
 dynamic = ["classifiers"]
