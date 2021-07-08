@@ -4,7 +4,8 @@ import psycopg2
 import os
 from datetime import datetime
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+import sendgrid
+from sendgrid.helpers.mail import Email, To, Content, Mail
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from icecream import ic
@@ -15,14 +16,14 @@ POSTGRES_URL = os.environ["POSTGRES_URL"]
 POSTGRES_USER = os.environ["POSTGRES_USER"]
 POSTGRES_PW = os.environ["POSTGRES_PW"]
 POSTGRES_DB = os.environ["POSTGRES_DB"]
-SSLMODE = os.environ["SSLMODE"]
-DB_URL = "postgresql://{user}:{pw}@{url}/{db}?sslmode=require".format(
-    user=POSTGRES_USER, pw=POSTGRES_PW, url=POSTGRES_URL, db=POSTGRES_DB
+# SSLMODE = os.environ["SSLMODE"]
+# DB_URL = "postgresql://{user}:{pw}@{url}/{db}?sslmode=require".format(
+#     user=POSTGRES_USER, pw=POSTGRES_PW, url=POSTGRES_URL, db=POSTGRES_DB
+# )
+CONN_STRING = "host={0} user={1} dbname={2} password={3}".format(
+    POSTGRES_URL, POSTGRES_USER, POSTGRES_DB, POSTGRES_PW
 )
-CONN_STRING = "host={0} user={1} dbname={2} password={3} sslmode={4}".format(
-    POSTGRES_URL, POSTGRES_USER, POSTGRES_DB, POSTGRES_PW, SSLMODE
-)
-SERVICE_BUS_CONNECTION_STRING = os.environ["SERVICE_BUS_CONNECTION_STRING"]
+SERVICE_BUS_CONNECTION_STRING = os.environ["joshnotificationqueue_SERVICEBUS"]
 SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]
 
 ic.enable()  # icecream logging
@@ -69,15 +70,22 @@ def main(msg: func.ServiceBusMessage):
             print(
                 "Sending email to {} {} at {}".format(attendee[0], attendee[1], attendee[2])
             )
-            message = Mail(
-                from_email="Clark.Kent@JoshHaines.com",
-                to_emails=attendee[2],
-                subject="{} - An Update from TechConf".format(attendee[0]),
-                html_content=message,
-            )
+            # message = Mail(
+            #     from_email="Clark.Kent@JoshHaines.com",
+            #     to_emails=attendee[2],
+            #     subject="{} - An Update from TechConf".format(attendee[0]),
+            #     html_content=message,
+            # )
             try:
                 sg = SendGridAPIClient(SENDGRID_API_KEY)
-                response = sg.send(message)
+                from_email = Email("Clark.Kent@JoshHaines.com")
+                to_email = To(attendee[2])
+                content = Content("text/plain", message)
+                mail = Mail(from_email, to_email, subject, content)
+                response = sg.client.mail.send.post(request_body=mail.get())
+                ic(response.status_code)
+                ic(response.body)
+                ic(response.headers)
                 # ic(response.status_code)
                 if response.status_code == 202:
                     success += 1
