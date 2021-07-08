@@ -78,4 +78,6 @@ Complete a month cost analysis of each Azure resource to give an estimate total 
 
 ## Architecture Explanation
 
-This is a placeholder section where you can provide an explanation and reasoning for your architecture selection for both the Azure Web App and Azure Function.
+I followed the guidance in the course mostly.  I used a linux app service with **github actions** to deploy the flask web app frontend.  This connects to an azure **postgres** (service) database which I checked locally with **PGadmin** and the app connected to using **sqlalchemy**.  I then used a **serverless function** on a **consumption** plan which watched a **service bus queue**.  The web app would send a message with a notification ID to the queue, which was read by the function.  The function would send some emails and update the notification in the database that the emails had been sent.  Overall things worked pretty well.
+
+I did have to ugprade the web app to the next tier (F1-B1) because of the warm-up delays that kept occuring.  It was still pretty inexpensive so it wasn't a big deal.
